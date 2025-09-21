@@ -58,3 +58,9 @@ The system is composed of three main parts:
 5.  **Open the frontend:** Open `frontend/index.html` in a web browser.
 6.  **Configure teas:** Open `frontend/config.html` to change the tea selection.
 7.  **Upload to Arduino:** Upload the `arduino/tea_robot.ino` sketch to your Arduino.
+
+
+## Future Improvements
+
+- Enable to change Arudino settings such as the amount of water from the web UI.
+- Allowing the AI to determin tea brewing time.
