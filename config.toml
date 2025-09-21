@@ -1,0 +1,8 @@
+[teas]
+tea1 = "Green Tea"
+tea2 = "Chamomile Tea"
+tea3 = "Peppermint Tea"
+
+[arduino]
+port = "/dev/ttyACM0"
+baud_rate = 9600
