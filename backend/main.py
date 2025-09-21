@@ -62,8 +62,10 @@ async def chat(websocket: WebSocket):
 
         # Serve tea and finish chat when tea_type is specified
         if ai_response.tea_type:
-            send_tea_command(f"{ai_response.tea_type},{
-                             ai_response.sugar_amount},{ai_response.milk_amount}")
+            # TODO: Additional Improvements
+            # milk: ai_response.milk_amount
+            # sugar: ai_response.sugar_amount
+            send_tea_command(f"serve_tea{ai_response.tea_type}")
             response_with_tea = f"{ai_response.response} お茶をどうぞ。"
             update_chat_prompt()
         else:

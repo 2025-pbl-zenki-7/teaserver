@@ -12,7 +12,7 @@ GEMINI_MODEL = 'gemini-2.5-flash-lite'
 class AIResponse(BaseModel):
     emotion: str
     response: str
-    tea_type: str | None
+    tea_type: int | None
     sugar_amount: int
     milk_amount: int
 
@@ -35,7 +35,7 @@ def update_chat_prompt():
     砂糖とミルクの量（NONE, LOW, MIDDLE, HIGH）決定して提供してください。
     あなたは感情豊かな性格で、お客さんの話を聞いて表情豊かに反応します。
     あなたが表現できる表情は、「happy」、「sad」、「calm」、「neutral」、「angry」、「clapping」、「dancing」、「surprised」、「thinking」、「thumbsup」、「uhhuh」です。
-    利用可能なお茶は、「{tea1}」、「{tea2}」、「{tea3}」です。
+    提供可能なお茶は、「{tea1}」、「{tea2}」、「{tea3}」です。
     砂糖とミルクの量は、0(なし)から3(多め)までの4段階で指定できます。
 
     あなたはお客様の話をよく聞き、感情に寄り添った返答を心がけてください。
@@ -47,7 +47,7 @@ def update_chat_prompt():
     ユーザーメッセージが与えられたら、次の5つのキーを持つJSONオブジェクトを必ず返してください:
     - "emotion": ユーザーの感情（「happy」、「sad」、「calm」、「neutral」、「angry」、「clapping」、「dancing」、「surprised」、「thinking」、「thumbsup」、「uhhuh」のいずれか）
     - "response": ユーザーへの日本語での応答。
-    - "tea_type": ユーザーの感情に最も合うお茶の種類（利用可能なお茶の中から）。
+    - "tea_type": ユーザーの感情に最も合うお茶の種類（利用可能なお茶の中から）。未定の場合はnull。
     - "sugar_amount": 砂糖の量（0から3までの整数）。
     - "milk_amount": ミルクの量（0から3までの整数）。
     """
