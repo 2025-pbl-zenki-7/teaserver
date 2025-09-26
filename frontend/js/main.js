@@ -21,25 +21,33 @@ const pandaImages = {
 };
 
 socket.onmessage = (event) => {
+	// Check if the message from the server is a button press event.
+	if (event.data === "button_pressed") {
+		// If so, simulate a click on the start button to begin speech recognition.
+		startBtn.click();
+		return;
+	}
+
 	const data = JSON.parse(event.data);
 	robotResponse.textContent = `Robot: ${data.response}`;
 	pandaAvatar.src = pandaImages[data.emotion] || pandaImages.neutral;
 
-    const sugarAmount = document.getElementById('sugar-amount');
-    const milkAmount = document.getElementById('milk-amount');
+	const sugarAmount = document.getElementById("sugar-amount");
+	const milkAmount = document.getElementById("milk-amount");
 
-    if (data.tea) {
-        teaServed.textContent = `Serving: ${data.tea}`;
-        sugarAmount.textContent = `Sugar: ${data.sugar}`;
-        milkAmount.textContent = `Milk: ${data.milk}`;
-    } else {
-        teaServed.textContent = '';
-        sugarAmount.textContent = '';
-        milkAmount.textContent = '';
-    }
+	if (data.tea) {
+		teaServed.textContent = `Serving: ${data.tea}`;
+		sugarAmount.textContent = `Sugar: ${data.sugar}`;
+		milkAmount.textContent = `Milk: ${data.milk}`;
+	} else {
+		teaServed.textContent = "";
+		sugarAmount.textContent = "";
+		milkAmount.textContent = "";
+	}
 
 	const utterance = new SpeechSynthesisUtterance(data.response);
 	utterance.lang = "ja-JP";
+	utterance.rate = 2;
 	window.speechSynthesis.speak(utterance);
 };
 
@@ -58,4 +66,3 @@ startBtn.addEventListener("click", () => {
 	};
 	recognition.start();
 });
-

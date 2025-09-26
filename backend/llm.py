@@ -1,3 +1,4 @@
+"""This module handles interactions with the Gemini AI model."""
 import os
 from google import genai
 from dotenv import load_dotenv
@@ -10,11 +11,13 @@ GEMINI_MODEL = 'gemini-2.5-flash-lite'
 
 
 class AIResponse(BaseModel):
+    """Defines the structure of the AI's response."""
     emotion: str
     response: str
     tea_type: int | None
     sugar_amount: int
     milk_amount: int
+    finished: bool
 
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -23,6 +26,7 @@ chat = None
 
 
 def update_chat_prompt():
+    """Initializes or updates the chat prompt with the current tea configuration."""
     global chat
     tea_config = get_tea_config()
     tea1 = tea_config.get('tea1', 'Green Tea')
@@ -35,7 +39,7 @@ def update_chat_prompt():
     砂糖とミルクの量（NONE, LOW, MIDDLE, HIGH）決定して提供してください。
     あなたは感情豊かな性格で、お客さんの話を聞いて表情豊かに反応します。
     あなたが表現できる表情は、「happy」、「sad」、「calm」、「neutral」、「angry」、「clapping」、「dancing」、「surprised」、「thinking」、「thumbsup」、「uhhuh」です。
-    提供可能なお茶は、「{tea1}」、「{tea2}」、「{tea3}」です。
+    提供可能なお茶は、「{tea1}」(1番)、「{tea2}」(2番)、「{tea3}」(3番)です。
     砂糖とミルクの量は、0(なし)から3(多め)までの4段階で指定できます。
 
     あなたはお客様の話をよく聞き、感情に寄り添った返答を心がけてください。
@@ -44,12 +48,16 @@ def update_chat_prompt():
     すべての会話が終わった後、お客様に紅茶を提供するための情報を決定します。
     ただし、お客様が1言目から希望の紅茶を指定した場合は、会話を終了させてその紅茶を提供してください。
 
-    ユーザーメッセージが与えられたら、次の5つのキーを持つJSONオブジェクトを必ず返してください:
-    - "emotion": ユーザーの感情（「happy」、「sad」、「calm」、「neutral」、「angry」、「clapping」、「dancing」、「surprised」、「thinking」、「thumbsup」、「uhhuh」のいずれか）
-    - "response": ユーザーへの日本語での応答。
-    - "tea_type": ユーザーの感情に最も合うお茶の種類（利用可能なお茶の中から）。未定の場合はnull。
+    お客さんがなにか話したら、次のJSONオブジェクトを必ず返してください。
+    絶対にNULLは返さないでください。
+    お客さんに提供する紅茶が決まったら、"tea_type"にその紅茶の番号を設定し、"finished"をtrueにしてください。
+    まだ決まっていない場合は、"tea_type"をnullにし、"finished"をfalseにしてください。
+    - "emotion":　お客さんの話を聞いて、あなたがとる表情。（「happy」、「sad」、「calm」、「neutral」、「angry」、「clapping」、「dancing」、「surprised」、「thinking」、「thumbsup」、「uhhuh」のいずれか）
+    - "response": お客さんへの日本語での応答。
+    - "tea_type": お客さんの感情に最も合うお茶の種類（利用可能なお茶の中から）。未定の場合はnull。
     - "sugar_amount": 砂糖の量（0から3までの整数）。
     - "milk_amount": ミルクの量（0から3までの整数）。
+    - "finished": 会話が終了し、紅茶の提供が決定した場合はtrue。まだ会話を続ける場合はfalse。
     """
 
     config = genai.types.GenerateContentConfig(
@@ -68,6 +76,7 @@ update_chat_prompt()  # Initial prompt setup
 
 
 def get_emotion_and_response(user_text: str):
+    """Sends the user's message to the AI and returns the parsed response."""
     global chat
     try:
         response = chat.send_message(user_text)
@@ -77,11 +86,14 @@ def get_emotion_and_response(user_text: str):
         print("----------------------------")
         ai_response = AIResponse.model_validate(response.parsed)
         return ai_response
+
     except Exception as e:
+        print(f"An error occurred: {e}")
         return AIResponse(
             emotion="neutral",
             response="ごめんなさい。よくわかりません。",
             tea_type=None,
             sugar_amount=0,
-            milk_amount=0
+            milk_amount=0,
+            finished=False
         )
