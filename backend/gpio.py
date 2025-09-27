@@ -8,4 +8,11 @@ def setup_button_callback(callback):
     button.when_pressed = callback
 
 
-button.wait_for_active()
+def is_button_pressed() -> bool:
+    if button.is_active:
+        return True
+    else:
+        return False
+
+
+# button.wait_for_active()

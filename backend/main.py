@@ -2,38 +2,13 @@ from .llm import AIResponse
 import os
 from .arduino import send_tea_command
 from .llm import get_emotion_and_response, update_chat_prompt
-from .config import get_tea_config, save_tea_config
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, WebSocket
+from starlette.responses import FileResponse
 from contextlib import asynccontextmanager
 from . import gpio
-
-# Manages active WebSocket connections and allows broadcasting messages to all clients.
-
-
-class ConnectionManager:
-    def __init__(self):
-        # A list to store active WebSocket connections.
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        # Accepts a new WebSocket connection and adds it to the list of active connections.
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        # Removes a WebSocket connection from the list of active connections.
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: str):
-        # Sends a message to all active WebSocket connections.
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-
-manager = ConnectionManager()
 
 
 app = FastAPI()
@@ -54,6 +29,11 @@ frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 
 
+@app.get("/")
+async def root():
+    return FileResponse("frontend/index.html")
+
+
 class FrontendResponse(BaseModel):
     emotion: str
     response: str
@@ -66,10 +46,18 @@ class FrontendResponse(BaseModel):
 @app.websocket("/api/chat")
 async def chat(websocket: WebSocket):
     # Add the new client to the connection manager.
-    await manager.connect(websocket)
+    await websocket.accept()
     try:
         # Loop indefinitely to listen for messages from the client.
         while True:
+
+            while True:
+                if (gpio.is_button_pressed()):
+                    websocket.send_text("button_pressed")
+                    break
+                else:
+                    continue
+
             data = await websocket.receive_text()
             ai_response: AIResponse = get_emotion_and_response(data)
 
@@ -96,21 +84,5 @@ async def chat(websocket: WebSocket):
 
             await websocket.send_text(frontend_response.model_dump_json())
     except Exception:
+        print("error")
         # When the client disconnects, remove them from the connection manager.
-        manager.disconnect(websocket)
-
-# This function is called when the GPIO button is pressed.
-
-
-async def button_pressed_callback():
-    # Broadcast a 'button_pressed' message to all connected clients.
-    await manager.broadcast("button_pressed")
-
-# This function runs when the FastAPI application starts.
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    gpio.setup_button_callback(button_pressed_callback)
-    yield
-    pass
